@@ -11,37 +11,48 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import time
 import sys
+import random
 from sklearn.datasets import fetch_mldata
-from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import train_test_split
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.metrics import accuracy_score
 
 t0 = time.time()
 # Importing the dataset
-inputsize = sys.stdin.readline().split(' ')
+inputsize = sys.stdin.readline().rstrip().split(' ')
 N = int(inputsize[0])
 M = int(inputsize[1])
-X = numpy.zeros((N,M)) #zero array of N rows, M columns
-y = numpy.zeros((N,1))
-names = numpy.zeros((N,1))
+X_train = np.zeros((N,M)) #zero array of N rows, M columns
+y_train = np.zeros((N)).astype(int)
+
+toBinary = {"+1" : 1, "-1" : 0}
+toOutput = {"1" : "+1", "0" : "-1"}
 
 for row in range(N):
-    line = sys.stdin.readine().split(' ')
-    name[row,1] = line[0]
-    y[row,1] = line[1]
+    line = sys.stdin.readline().rstrip().split(' ')
+    y_train[row] = toBinary[line[1]]
     for col in range(M):
-        X[row,col] = float(line[col+2].split(':')[1])
+        X_train[row,col] = float(line[col+2].split(':')[1])
 
+N_test = int(sys.stdin.readline().rstrip())
+names = np.chararray((N_test), itemsize=5)
+X_test = np.zeros((N_test,M)) #zero array of N rows, M columns
+
+for row in range(N_test):
+    line = sys.stdin.readline().rstrip().split(' ')
+    names[row] = line[0]
+    for col in range(M):
+        X_test[row,col] = float(line[col+1].split(':')[1])
 
 # Splitting the dataset into the Training set and Test set
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=0)
-
-grad_clf = GradientBoostingClassifier(max_depth=10, n_estimators=10, learning_rate=0.5)
+# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=random.randint(1, 100))
+grad_clf = GradientBoostingClassifier(max_depth=1, n_estimators=300, learning_rate=0.3)
 grad_clf.fit(X_train, y_train)
 
-y_pred_rf = grad_clf.predict(X_test)
+y_pred_rf = grad_clf.predict(X_test).astype(str)
+y_pred_rf = np.array([toOutput[row] for row in y_pred_rf])
 
-v = accuracy_score(y_test, y_pred_rf)
-print(v)
+out = np.column_stack((names, y_pred_rf))
+np.savetxt('answers.txt', out, delimiter=' ', fmt='%s')
 
-print("Time elapsed: ", time.time() - t0)
+print(time.time() - t0)
